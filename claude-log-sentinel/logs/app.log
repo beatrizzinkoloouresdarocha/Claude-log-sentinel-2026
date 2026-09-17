@@ -1,0 +1,12 @@
+2026-09-17 13:32:30,351 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:32:33,359 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:32:36,370 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:32:39,381 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:32:42,388 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:40:41,291 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:40:44,317 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:40:47,330 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:40:50,342 - ERROR - AUTH_ERROR: Invalid JWT Signature for user_id=9841
+2026-09-17 13:40:53,343 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:40:56,353 - INFO - HTTP 200 - /api/v1/healthcheck OK
+2026-09-17 13:40:59,361 - INFO - HTTP 200 - /api/v1/healthcheck OK
