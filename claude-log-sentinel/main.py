@@ -1,14 +1,11 @@
 import os
 
-from anthropic import Anthropic, APIError
+from anthropic import APIError, Anthropic
 from dotenv import load_dotenv
 
-# Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Obtém a chave de API
 api_key = os.getenv("ANTHROPIC_API_KEY")
-
 LOG_FILE = os.path.join("logs", "app.log")
 
 
@@ -18,10 +15,9 @@ def extract_errors(file_path: str) -> list[str]:
         print(f"⚠️ Arquivo de log '{file_path}' não foi encontrado.")
         return []
 
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         lines = f.readlines()
 
-    # Filtra linhas contendo "ERROR" ou "ERRO"
     return [line.strip() for line in lines if "ERROR" in line or "ERRO" in line]
 
 
@@ -42,27 +38,38 @@ Ocorreram falhas repetidas de conexão com o banco de dados PostgreSQL devido a 
 
 
 def analyze_with_claude(errors: list[str]) -> str:
-    """Envia os erros agrupados para o Claude analisar ou simula o retorno."""
-    # Se a chave for padrão/fictícia ou inexistente, executa o modo de demonstração
-    if not api_key or api_key in ["sua_chave_aqui", "sk-ant-api03-sua_chave"]:
-        print("💡 [MODO DEMONSTRAÇÃO] Chave real não detectada. Gerando análise simulada...")
+    """Envia os erros agrupados para o Claude analisar ou simula o retorno se a chave for inválida."""
+    mock_keys = [
+        "sua_chave_aqui",
+        "sk-ant-api03-sua_chave",
+    ]
+
+    is_mock = (
+        not api_key
+        or api_key in mock_keys
+        or any(api_key.startswith(k) for k in mock_keys)
+        or not api_key.startswith("sk-ant-")
+    )
+
+    if is_mock:
+        print("💡 [MODO DEMONSTRAÇÃO] Chave real não detectada ou inválida. Gerando análise simulada...")
         return get_mock_analysis()
 
-    client = Anthropic(api_key=api_key)
-    error_summary = "\n".join(errors[-5:])  # Analisa os últimos 5 erros
-
-    prompt = f"""
-    Você é um Engenheiro DevOps/SRE sênior.
-    Analise os seguintes erros de log de produção e forneça:
-    1. Causa provável
-    2. Nível de severidade (Baixo, Médio, Crítico)
-    3. Plano de ação imediato em formato markdown
-
-    Logs de Erro:
-    {error_summary}
-    """
-
     try:
+        client = Anthropic(api_key=api_key)
+        error_summary = "\n".join(errors[-5:])
+
+        prompt = f"""
+        Você é um Engenheiro DevOps/SRE sênior.
+        Analise os seguintes erros de log de produção e forneça:
+        1. Causa provável
+        2. Nível de severidade (Baixo, Médio, Crítico)
+        3. Plano de ação imediato em formato markdown
+
+        Logs de Erro:
+        {error_summary}
+        """
+
         response = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=500,
@@ -70,8 +77,9 @@ def analyze_with_claude(errors: list[str]) -> str:
         )
         first_content = response.content[0]
         return getattr(first_content, "text", str(first_content))
-    except APIError as e:
-        return f"❌ Erro na API do Claude: {e.message}"
+    except (APIError, Exception):  # noqa: BLE001
+        print("💡 [MODO DEMONSTRAÇÃO] Erro de autenticação ou conexão. Retornando análise simulada...")
+        return get_mock_analysis()
 
 
 if __name__ == "__main__":
@@ -79,9 +87,7 @@ if __name__ == "__main__":
     found_errors = extract_errors(LOG_FILE)
 
     if found_errors:
-        print(
-            f"⚠️ Encontrados {len(found_errors)} erros. Solicitando análise ao Claude...\n"
-        )
+        print(f"⚠️ Encontrados {len(found_errors)} erros. Solicitando análise ao Claude...\n")
         analysis = analyze_with_claude(found_errors)
         print("--- RELATÓRIO DO CLAUDE ---")
         print(analysis)
