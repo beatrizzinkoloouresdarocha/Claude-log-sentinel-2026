@@ -1,6 +1,6 @@
 import os
 
-from anthropic import APIError, Anthropic
+from anthropic import Anthropic, APIError
 from dotenv import load_dotenv
 
 load_dotenv()
