@@ -1,6 +1,11 @@
 import os
 
-from anthropic import Anthropic, APIError
+try:
+    from anthropic import Anthropic, APIError
+except ImportError:
+    Anthropic = None
+    APIError = Exception
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,14 +50,15 @@ def analyze_with_claude(errors: list[str]) -> str:
     ]
 
     is_mock = (
-        not api_key
+        not Anthropic
+        or not api_key
         or api_key in mock_keys
         or any(api_key.startswith(k) for k in mock_keys)
         or not api_key.startswith("sk-ant-")
     )
 
     if is_mock:
-        print("💡 [MODO DEMONSTRAÇÃO] Chave real não detectada ou inválida. Gerando análise simulada...")
+        print("💡 [MODO DEMONSTRAÇÃO] Chave real não detectada ou biblioteca ausente. Gerando análise simulada...")
         return get_mock_analysis()
 
     try:
